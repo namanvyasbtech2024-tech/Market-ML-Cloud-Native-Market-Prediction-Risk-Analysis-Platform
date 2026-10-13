@@ -1,3 +1,19 @@
+// Route API requests to live EC2 backend if frontend is hosted on AWS S3 Static Website Hosting
+(function() {
+    const isS3 = window.location.hostname.includes("s3-website") || 
+                 (window.location.hostname.includes("amazonaws.com") && window.location.hostname.includes("s3"));
+    if (isS3) {
+        const originalFetch = window.fetch;
+        const EC2_BACKEND = "http://13.217.227.166";
+        window.fetch = function(url, options) {
+            if (typeof url === 'string' && url.startsWith('/api/')) {
+                url = EC2_BACKEND + url;
+            }
+            return originalFetch(url, options);
+        };
+    }
+})();
+
 document.addEventListener("DOMContentLoaded", () => {
     // --- Navigation Tabs ---
     const navItems = document.querySelectorAll(".nav-links li");
