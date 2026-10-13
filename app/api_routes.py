@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api")
 
 @router.get("/health")
 async def health_check():
-    return {"status": "success", "message": "API is online"}
+    return {"status": "ok", "message": "Market ML API is online"}
 
 
 @router.get("/stocks", response_model=List[str])
