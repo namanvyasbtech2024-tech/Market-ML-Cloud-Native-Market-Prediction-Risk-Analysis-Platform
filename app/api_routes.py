@@ -381,7 +381,8 @@ async def get_explainability(ticker: str):
         
         importances = get_global_feature_importance(model, X_test)
         top_15_df = importances.head(15)
-        top_15_dict = dict(zip(top_15_df['Feature'], top_15_df['SHAP_Importance']))
+        imp_col = 'Importance' if 'Importance' in top_15_df.columns else 'SHAP_Importance'
+        top_15_dict = dict(zip(top_15_df['Feature'], top_15_df[imp_col]))
         
         return {"importances": top_15_dict}
     except Exception as e:
