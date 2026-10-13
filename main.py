@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 
 # Create the FastAPI app
-app = FastAPI(title="Market ML - Financial Market Prediction & Concentration Analytics")
+app = FastAPI(title="Market ML: Cloud-Native Market Prediction & Risk Analysis Platform")
 
 # Add CORS Middleware
 app.add_middleware(
