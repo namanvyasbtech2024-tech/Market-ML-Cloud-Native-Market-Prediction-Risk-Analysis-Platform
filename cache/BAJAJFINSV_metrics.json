@@ -1,0 +1,1 @@
+{"status": "success", "models": {"linear_regression": {"rmse": 0.0, "mae": 0.0, "r2": 0.0}, "random_forest": {"rmse": 0.0, "mae": 0.0, "r2": 0.0}, "xgboost": {"rmse": 0.0, "mae": 0.0, "r2": 0.0}}}
