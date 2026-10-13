@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Large binaries & models
+*.pkl
+models/
+data/processed_dataset.csv
+data/users.db
+data/logs/
+data/users/
+
+# Logs & temp
+*.log
+.DS_Store
+.DS_Store?
+._*
+
+# Environment
+.env
+.env.local
