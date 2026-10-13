@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 REGION="${AWS_REGION:-ap-south-1}"
-BUCKET_NAME="${1:-marketml-citadel-$RANDOM}"
+BUCKET_NAME="${1:-market-ml-prediction-risk-platform}"
 
 echo "=================================================="
 echo "🚀 Deploying Market ML Frontend to AWS S3"
