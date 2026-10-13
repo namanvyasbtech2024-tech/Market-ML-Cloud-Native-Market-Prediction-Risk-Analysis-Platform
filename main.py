@@ -4,7 +4,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = "1"
 os.environ['OMP_NUM_THREADS'] = "1"
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,13 +49,32 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend(request: Request):
     """Serves the main Market ML single-page application."""
-    return templates.TemplateResponse("index.html", {"request": request})
+    for path in [
+        os.path.join(TEMPLATES_DIR, "index.html"),
+        os.path.join(APP_DIR, "index.html"),
+        os.path.join(STATIC_DIR, "index.html"),
+        os.path.join(ROOT_DIR, "index.html")
+    ]:
+        if os.path.exists(path):
+            return FileResponse(path, media_type="text/html")
+    try:
+        return templates.TemplateResponse(request=request, name="index.html")
+    except Exception:
+        return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/index.html", response_class=HTMLResponse)
+async def serve_index(request: Request):
+    return await serve_frontend(request)
 
 @app.get("/api/health")
 @app.get("/health")
 async def health_check():
     """Simple API health check."""
     return {"status": "ok", "message": "Market ML FastAPI backend is running"}
+
+@app.get("/favicon.ico")
+async def favicon():
+    return HTMLResponse(content="", status_code=204)
 
 if __name__ == "__main__":
     import uvicorn
