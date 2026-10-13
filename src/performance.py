@@ -6,7 +6,18 @@ import logging
 import hashlib
 import json
 from typing import Any, Callable, Optional
-import streamlit as st
+
+class DummySession(dict):
+    pass
+
+class DummyStreamlit:
+    def __init__(self):
+        self.session_state = DummySession()
+
+try:
+    import streamlit as st
+except ImportError:
+    st = DummyStreamlit()
 
 logger = logging.getLogger(__name__)
 
