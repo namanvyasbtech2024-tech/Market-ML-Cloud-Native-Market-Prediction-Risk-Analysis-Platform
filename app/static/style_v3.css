@@ -309,3 +309,12 @@ p {
     justify-content: space-between;
     align-items: center;
 }
+
+.brand-subtitle {
+    color: #8b949e;
+    font-size: 0.88rem;
+    font-weight: 400;
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+}
+
