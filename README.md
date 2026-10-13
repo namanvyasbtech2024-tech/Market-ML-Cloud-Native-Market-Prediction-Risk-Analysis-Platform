@@ -1,4 +1,4 @@
-# Market ML: Financial Market Prediction, Quantitative Analytics & Cloud Observability Platform
+# Market ML: Cloud-Native Market Prediction & Risk Analysis Platform
 
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI_0.110-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Docker](https://img.shields.io/badge/Container-Docker_MultiStage-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com)
@@ -47,8 +47,8 @@ The dashboard is structured into 6 institutional tabs:
 ## 🚀 Quickstart & Local Development
 
 ```bash
-git clone https://github.com/namanvyasbtech2024-tech/Risk-Citadel-Multi-Sector-Concentration-Analytics-and-Black-Swan-Simulation-Platform.git
-cd Risk-Citadel-Multi-Sector-Concentration-Analytics-and-Black-Swan-Simulation-Platform
+git clone https://github.com/namanvyasbtech2024-tech/Market-ML-Cloud-Native-Market-Prediction-Risk-Analysis-Platform.git
+cd Market-ML-Cloud-Native-Market-Prediction-Risk-Analysis-Platform
 
 # Install dependencies
 pip install -r requirements.txt
