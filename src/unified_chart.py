@@ -3,7 +3,27 @@
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import streamlit as st
+try:
+    import streamlit as st
+except ImportError:
+    class DummyStreamlit:
+        session_state = {}
+        def plotly_chart(self, *args, **kwargs): pass
+        def columns(self, n=1, *args, **kwargs): return [self] * (n if isinstance(n, int) else len(n))
+        def metric(self, *args, **kwargs): pass
+        def info(self, *args, **kwargs): pass
+        def warning(self, *args, **kwargs): pass
+        def radio(self, *args, **kwargs): return args[1][0] if len(args) > 1 and args[1] else "Candle"
+        def empty(self): return self
+        def markdown(self, *args, **kwargs): pass
+        def subheader(self, *args, **kwargs): pass
+        def checkbox(self, *args, **kwargs): return kwargs.get('value', False)
+        def expander(self, *args, **kwargs):
+            from contextlib import nullcontext
+            return nullcontext()
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+    st = DummyStreamlit()
 from typing import Dict, List, Optional
 import numpy as np
 
