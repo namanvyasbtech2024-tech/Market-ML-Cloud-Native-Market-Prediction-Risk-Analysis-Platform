@@ -7,7 +7,6 @@ import requests
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 import time
-import streamlit as st
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 # Ensure project root and src are importable
@@ -160,7 +159,7 @@ class LiveStockData:
             # Use the existing add_technical_indicators function
             return add_technical_indicators(df)
         except Exception as e:
-            st.warning(f"Error calculating technical indicators: {e}")
+            print(f"Warning: Error calculating technical indicators: {e}")
             return df
 
     def get_current_price(self, ticker: str) -> Dict:

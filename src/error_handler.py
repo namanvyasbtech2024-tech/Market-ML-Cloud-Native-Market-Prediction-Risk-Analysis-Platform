@@ -4,10 +4,25 @@ import logging
 import sys
 import traceback
 from typing import Optional, Any
-import streamlit as st
 from datetime import datetime
 import json
 import os
+
+class DummyStreamlit:
+    def error(self, *args, **kwargs): pass
+    def warning(self, *args, **kwargs): pass
+    def info(self, *args, **kwargs): pass
+    def expander(self, *args, **kwargs):
+        from contextlib import nullcontext
+        return nullcontext()
+    def code(self, *args, **kwargs): pass
+    def cache_resource(self, func): return func
+    def cache_data(self, func): return func
+
+try:
+    import streamlit as st
+except ImportError:
+    st = DummyStreamlit()
 
 # Configure logging
 LOG_DIR = os.path.join(os.path.dirname(__file__), '..', 'logs')
