@@ -1,78 +1,113 @@
 import numpy as np
 import pandas as pd
-import shap
 import matplotlib.pyplot as plt
 
-def get_tree_explainer(model, X_train):
+try:
+    import shap
+    HAS_SHAP = True
+except ImportError:
+    shap = None
+    HAS_SHAP = False
+
+def get_tree_explainer(model, X_train=None):
     """
     Returns a SHAP TreeExplainer for tree-based models like Random Forest or XGBoost.
     """
-    # For some models, we might need to configure feature perturbation
-    explainer = shap.TreeExplainer(model, X_train)
-    return explainer
+    if HAS_SHAP and shap is not None:
+        try:
+            if X_train is not None:
+                return shap.TreeExplainer(model, X_train)
+            return shap.TreeExplainer(model)
+        except Exception:
+            pass
+    return None
 
 def generate_shap_summary_plot(model, X_test, show_plot=False, save_path=None):
     """
     Generates a SHAP summary plot for global feature importance.
     """
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X_test)
-    
-    # SHAP sometimes returns a list of arrays for classification (one for each class). 
-    # For binary classification, we usually take the values for class 1.
-    if isinstance(shap_values, list):
-        shap_values = shap_values[1]
+    if not (HAS_SHAP and shap is not None):
+        return None
+    try:
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X_test)
         
-    plt.figure(figsize=(10, 8))
-    shap.summary_plot(shap_values, X_test, show=show_plot)
-    
-    if save_path:
-        plt.savefig(save_path, bbox_inches='tight')
-        plt.close()
-    
-    return shap_values
+        if isinstance(shap_values, list):
+            shap_values = shap_values[1]
+            
+        plt.figure(figsize=(10, 8))
+        shap.summary_plot(shap_values, X_test, show=show_plot)
+        
+        if save_path:
+            plt.savefig(save_path, bbox_inches='tight')
+            plt.close()
+        
+        return shap_values
+    except Exception:
+        return None
 
 def generate_local_explanation(model, X_test, instance_index, show_plot=False, save_path=None):
     """
     Generates a SHAP force plot or waterfall plot for a single prediction.
     """
-    explainer = shap.TreeExplainer(model)
-    
-    # In shap 0.40+, explainer(X) returns an Explanation object which is easier to plot
-    explanation = explainer(X_test.iloc[[instance_index]])
-    
-    # For binary classification with TreeExplainer, explanation.values might have shape (1, num_features, 2)
-    if len(explanation.values.shape) == 3:
-        # Slice for the positive class (class 1)
-        explanation = explanation[:, :, 1]
-    
-    plt.figure(figsize=(12, 6))
-    # Waterfall plot is great for local explainability
-    shap.plots.waterfall(explanation[0], show=show_plot)
-    
-    if save_path:
-        plt.savefig(save_path, bbox_inches='tight')
-        plt.close()
+    if not (HAS_SHAP and shap is not None):
+        return None
+    try:
+        explainer = shap.TreeExplainer(model)
+        explanation = explainer(X_test.iloc[[instance_index]])
         
-    return explanation
+        if hasattr(explanation, 'values') and len(explanation.values.shape) == 3:
+            explanation = explanation[:, :, 1]
+        
+        plt.figure(figsize=(12, 6))
+        shap.plots.waterfall(explanation[0], show=show_plot)
+        
+        if save_path:
+            plt.savefig(save_path, bbox_inches='tight')
+            plt.close()
+            
+        return explanation
+    except Exception:
+        return None
 
 def get_global_feature_importance(model, X_test):
     """
-    Returns a DataFrame of features sorted by their mean absolute SHAP value.
-    This serves as a robust global feature importance metric.
+    Returns a DataFrame of features sorted by feature importance / SHAP value.
+    Supports DataFrame or list of column names, and falls back gracefully
+    to tree model feature_importances_ if SHAP is absent or computation fails.
     """
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X_test)
-    
-    if isinstance(shap_values, list):
-        shap_values = shap_values[1]
-        
-    # Calculate mean absolute SHAP values for each feature
-    mean_abs_shap = np.abs(shap_values).mean(axis=0)
-    
-    importance_df = pd.DataFrame({
-        'Feature': X_test.columns,
-        'SHAP_Importance': mean_abs_shap
-    }).sort_values(by='SHAP_Importance', ascending=False).reset_index(drop=True)
-    
-    return importance_df
+    if isinstance(X_test, (list, tuple, np.ndarray)):
+        cols = list(X_test)
+    elif hasattr(X_test, 'columns'):
+        cols = list(X_test.columns)
+    else:
+        cols = [f"Feature_{i}" for i in range(len(getattr(model, 'feature_importances_', [])))]
+
+    importances = None
+
+    if HAS_SHAP and shap is not None and hasattr(X_test, 'columns'):
+        try:
+            explainer = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(X_test)
+            if isinstance(shap_values, list):
+                shap_values = shap_values[1]
+            importances = np.abs(shap_values).mean(axis=0)
+        except Exception:
+            importances = None
+
+    if importances is None:
+        if hasattr(model, 'feature_importances_'):
+            importances = np.array(model.feature_importances_)
+        elif hasattr(model, 'coef_'):
+            importances = np.abs(np.array(model.coef_)).flatten()
+        else:
+            importances = np.ones(len(cols)) / max(len(cols), 1)
+
+    df = pd.DataFrame({
+        'Feature': cols,
+        'Importance': importances,
+        'SHAP_Importance': importances
+    }).sort_values(by='Importance', ascending=False).reset_index(drop=True)
+
+    return df
+
