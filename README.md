@@ -66,3 +66,13 @@ Open your browser at **`http://localhost:8000`** (or `http://localhost:8001`).
 sudo docker compose up -d --build
 ```
 Access directly at **`http://<YOUR_EC2_PUBLIC_IP>`** (Standard HTTP port 80).
+
+---
+
+## 🔐 Hybrid Authentication & Access Gatekeeping
+
+The platform features a zero-downtime hybrid access control system:
+* **Free Public Access**: Unrestricted market exploration on the **Analysis** tab (candlesticks, technical indicators, order book depth, live KPIs).
+* **Protected Institutional Tabs**: Access control on **Model Eval**, **Strategy Backtest**, **1-Year Forecast**, **Portfolio**, and **News & Sentiment Analysis**.
+* **Zero-Downtime Hybrid Failover**: Primary authorization handled via FastAPI `/api/auth` backed by SQLite `data/users.db` and PBKDF2-HMAC-SHA256 (100,000 rounds). In environments with container rebuilding or offline previews, the client seamlessly falls back to Web Crypto SHA-256 session persistence so users are never blocked.
+
