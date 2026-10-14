@@ -1,8 +1,11 @@
-// Route API requests to live EC2 backend if frontend is hosted on AWS S3 Static Website Hosting
+// Route API requests to live EC2 backend if hosted on AWS S3 or running standalone locally
 (function() {
-    const isS3 = window.location.hostname.includes("s3-website") || 
-                 (window.location.hostname.includes("amazonaws.com") && window.location.hostname.includes("s3"));
-    if (isS3) {
+    const isRemoteBackend = window.location.hostname.includes("s3-website") || 
+                            (window.location.hostname.includes("amazonaws.com") && window.location.hostname.includes("s3")) ||
+                            window.location.protocol === "file:" ||
+                            window.location.hostname === "localhost" ||
+                            window.location.hostname === "127.0.0.1";
+    if (isRemoteBackend) {
         const originalFetch = window.fetch;
         const EC2_BACKEND = "http://13.217.227.166";
         window.fetch = function(url, options) {
