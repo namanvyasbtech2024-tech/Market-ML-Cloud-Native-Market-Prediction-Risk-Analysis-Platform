@@ -356,5 +356,31 @@ def authenticate_user(username_or_email: str, password: str) -> Tuple[bool, str,
         return False, f"Authentication error: {e}", None
 
 
+def get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
+    """Retrieve sanitized user dictionary from SQLite by username."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, username, email, full_name, tier, created_at
+                FROM users
+                WHERE username = ? COLLATE NOCASE
+            """, (username,))
+            row = cursor.fetchone()
+            if row:
+                return {
+                    "id": row["id"],
+                    "username": row["username"],
+                    "email": row["email"],
+                    "full_name": row["full_name"] or row["username"],
+                    "tier": row["tier"] or "pro",
+                    "created_at": row["created_at"]
+                }
+    except Exception as e:
+        print(f"Error fetching user by username: {e}")
+    return None
+
+
 # Initialize database table and existing user directories on module load
 init_auth_db()
+

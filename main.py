@@ -34,6 +34,7 @@ os.makedirs(TEMPLATES_DIR, exist_ok=True)
 from app.api_routes import router as api_router
 from app.forecast_routes import forecast_router
 from app.portfolio_routes import portfolio_router
+from app.auth_routes import router as auth_router
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -42,6 +43,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.include_router(api_router)
 app.include_router(forecast_router)
 app.include_router(portfolio_router)
+app.include_router(auth_router)
 
 # Setup Jinja2 templates
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
