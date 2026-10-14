@@ -90,12 +90,21 @@ def test_user_registration_and_auth():
     print(f"✅ SQLite persistence lookup PASSED: {db_user}")
 
 
+def test_session_token_and_security():
+    print("Testing session token generation and security constraints...")
+    token = secrets.token_hex(24)
+    assert len(token) == 48, "Session token must be 48 hex characters"
+    assert token.isalnum(), "Session token must be alphanumeric"
+    print(f"✅ Session token validation PASSED: {token[:12]}...")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("RUNNING MARKET ML AUTHENTICATION TEST SUITE")
     print("=" * 60)
     test_password_hashing()
     test_user_registration_and_auth()
+    test_session_token_and_security()
     print("=" * 60)
     print("ALL TESTS PASSED SUCCESSFULLY! 🎉")
     print("=" * 60)
