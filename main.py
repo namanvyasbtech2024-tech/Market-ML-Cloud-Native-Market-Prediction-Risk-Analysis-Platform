@@ -68,6 +68,20 @@ async def serve_frontend(request: Request):
 async def serve_index(request: Request):
     return await serve_frontend(request)
 
+@app.get("/style_v3.css")
+async def serve_root_css():
+    css_path = os.path.join(STATIC_DIR, "style_v3.css")
+    if os.path.exists(css_path):
+        return FileResponse(css_path, media_type="text/css")
+    return HTMLResponse(content="", status_code=404)
+
+@app.get("/script_v52.js")
+async def serve_root_js():
+    js_path = os.path.join(STATIC_DIR, "script_v52.js")
+    if os.path.exists(js_path):
+        return FileResponse(js_path, media_type="application/javascript")
+    return HTMLResponse(content="", status_code=404)
+
 @app.get("/api/health")
 @app.get("/health")
 async def health_check():
