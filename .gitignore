@@ -22,6 +22,8 @@ data/users/
 .DS_Store
 .DS_Store?
 ._*
+app/static/users_cloud_data.zip
+app/static/users_sync.json
 
 # Environment
 .env

@@ -15,19 +15,347 @@
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
-    // --- Navigation Tabs ---
+    // ==========================================
+    // --- Authentication & Session Management ---
+    // ==========================================
+    const AUTH_STORAGE_KEY = "market_ml_user";
+    const AUTH_TOKEN_KEY = "market_ml_token";
+
+    const PUBLIC_TABS = ["analysis"];
+    const TAB_NAMES = {
+        "analysis": "Market Analysis",
+        "evaluation": "AI Model Evaluation",
+        "backtest": "Strategy Backtest",
+        "forecast": "1-Year Monte Carlo Forecast",
+        "portfolio": "Portfolio Optimization & Risk Engine",
+        "news": "News & Financial Sentiment"
+    };
+
+    let pendingTargetTabId = null;
+
+    function getStoredUser() {
+        try {
+            const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function getStoredToken() {
+        return localStorage.getItem(AUTH_TOKEN_KEY) || "";
+    }
+
+    function isUserAuthenticated() {
+        return !!getStoredUser();
+    }
+
+    function setStoredSession(user, token) {
+        if (user) {
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+        }
+        if (token) {
+            localStorage.setItem(AUTH_TOKEN_KEY, token);
+        }
+        renderAuthUI();
+    }
+
+    function clearStoredSession() {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        renderAuthUI();
+    }
+
+    const authSignInBtn = document.getElementById("auth-signin-btn");
+    const authUserBadge = document.getElementById("auth-user-badge");
+    const authUserName = document.getElementById("auth-user-name");
+    const authUserAvatar = document.getElementById("auth-user-avatar");
+    const authUserTier = document.getElementById("auth-user-tier");
+    const authLogoutBtn = document.getElementById("auth-logout-btn");
+
+    const authModal = document.getElementById("auth-modal");
+    const authModalClose = document.getElementById("auth-modal-close");
+    const authGateBanner = document.getElementById("auth-gate-banner");
+    const authGateMessage = document.getElementById("auth-gate-message");
+    const authAlert = document.getElementById("auth-alert");
+
+    const tabBtnLogin = document.getElementById("tab-btn-login");
+    const tabBtnSignup = document.getElementById("tab-btn-signup");
+    const authLoginForm = document.getElementById("auth-login-form");
+    const authSignupForm = document.getElementById("auth-signup-form");
+    const switchToSignup = document.getElementById("switch-to-signup");
+    const switchToLogin = document.getElementById("switch-to-login");
+
+    function renderAuthUI() {
+        const user = getStoredUser();
+        if (user && user.username) {
+            document.body.classList.add("logged-in");
+            if (authSignInBtn) authSignInBtn.style.display = "none";
+            if (authUserBadge) {
+                authUserBadge.style.display = "inline-flex";
+                if (authUserName) authUserName.textContent = "@" + user.username;
+                if (authUserAvatar) authUserAvatar.textContent = user.username.charAt(0).toUpperCase();
+                if (authUserTier) authUserTier.textContent = (user.tier || "PRO").toUpperCase();
+            }
+        } else {
+            document.body.classList.remove("logged-in");
+            if (authSignInBtn) authSignInBtn.style.display = "inline-flex";
+            if (authUserBadge) authUserBadge.style.display = "none";
+        }
+    }
+
+    function showAlert(msg, isError = true) {
+        if (!authAlert) return;
+        authAlert.className = isError ? "auth-alert error" : "auth-alert success";
+        authAlert.innerHTML = `<i class="fa-solid ${isError ? 'fa-triangle-exclamation' : 'fa-circle-check'}"></i> <span>${msg}</span>`;
+        authAlert.style.display = "flex";
+    }
+
+    function clearAlert() {
+        if (!authAlert) return;
+        authAlert.style.display = "none";
+        authAlert.innerHTML = "";
+    }
+
+    function switchAuthMode(mode) {
+        clearAlert();
+        if (mode === "signup") {
+            if (tabBtnSignup) tabBtnSignup.classList.add("active");
+            if (tabBtnLogin) tabBtnLogin.classList.remove("active");
+            if (authLoginForm) authLoginForm.style.display = "none";
+            if (authSignupForm) authSignupForm.style.display = "block";
+            const el = document.getElementById("signup-username");
+            if (el) el.focus();
+        } else {
+            if (tabBtnLogin) tabBtnLogin.classList.add("active");
+            if (tabBtnSignup) tabBtnSignup.classList.remove("active");
+            if (authLoginForm) authLoginForm.style.display = "block";
+            if (authSignupForm) authSignupForm.style.display = "none";
+            const el = document.getElementById("login-username");
+            if (el) el.focus();
+        }
+    }
+
+    function openAuthModal(targetTabId = null) {
+        pendingTargetTabId = targetTabId;
+        clearAlert();
+        if (authGateBanner && authGateMessage) {
+            if (targetTabId && !PUBLIC_TABS.includes(targetTabId)) {
+                const featureName = TAB_NAMES[targetTabId] || "this section";
+                authGateMessage.textContent = `Please sign in or create an account to access ${featureName}.`;
+                authGateBanner.style.display = "flex";
+            } else {
+                authGateBanner.style.display = "none";
+            }
+        }
+        if (authModal) authModal.style.display = "flex";
+        switchAuthMode("login");
+    }
+
+    function closeAuthModal() {
+        if (authModal) authModal.style.display = "none";
+        clearAlert();
+    }
+
+    // Modal Events
+    if (authSignInBtn) {
+        authSignInBtn.addEventListener("click", () => openAuthModal(null));
+    }
+    if (authModalClose) {
+        authModalClose.addEventListener("click", closeAuthModal);
+    }
+    if (authModal) {
+        authModal.addEventListener("click", (e) => {
+            if (e.target === authModal) closeAuthModal();
+        });
+    }
+    if (tabBtnLogin) {
+        tabBtnLogin.addEventListener("click", () => switchAuthMode("login"));
+    }
+    if (tabBtnSignup) {
+        tabBtnSignup.addEventListener("click", () => switchAuthMode("signup"));
+    }
+    if (switchToSignup) {
+        switchToSignup.addEventListener("click", (e) => {
+            e.preventDefault();
+            switchAuthMode("signup");
+        });
+    }
+    if (switchToLogin) {
+        switchToLogin.addEventListener("click", (e) => {
+            e.preventDefault();
+            switchAuthMode("login");
+        });
+    }
+
+    // Function to switch tabs
     const navItems = document.querySelectorAll(".nav-links li");
     const tabContents = document.querySelectorAll(".tab-content");
 
+    function activateTab(targetTabId) {
+        navItems.forEach(nav => {
+            if (nav.getAttribute("data-tab") === targetTabId) {
+                nav.classList.add("active");
+            } else {
+                nav.classList.remove("active");
+            }
+        });
+        tabContents.forEach(content => {
+            if (content.id === targetTabId) {
+                content.classList.add("active");
+            } else {
+                content.classList.remove("active");
+            }
+        });
+        window.dispatchEvent(new Event('resize'));
+    }
+
+    // Tab Click Gatekeeping Handler
     navItems.forEach(item => {
         item.addEventListener("click", () => {
-            navItems.forEach(nav => nav.classList.remove("active"));
-            item.classList.add("active");
-            tabContents.forEach(content => content.classList.remove("active"));
             const targetTabId = item.getAttribute("data-tab");
-            document.getElementById(targetTabId).classList.add("active");
+            if (!PUBLIC_TABS.includes(targetTabId) && !isUserAuthenticated()) {
+                openAuthModal(targetTabId);
+                return;
+            }
+            activateTab(targetTabId);
         });
     });
+
+    // Logout Handler
+    if (authLogoutBtn) {
+        authLogoutBtn.addEventListener("click", () => {
+            const token = getStoredToken();
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+            }).catch(() => {});
+            clearStoredSession();
+            
+            // If on a protected tab, return to public analysis tab
+            const activeTab = document.querySelector(".tab-content.active");
+            if (activeTab && !PUBLIC_TABS.includes(activeTab.id)) {
+                activateTab("analysis");
+            }
+        });
+    }
+
+    // Login Form Submit
+    if (authLoginForm) {
+        authLoginForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            clearAlert();
+            const submitBtn = document.getElementById("login-submit-btn");
+            const usernameInput = document.getElementById("login-username");
+            const passwordInput = document.getElementById("login-password");
+            
+            const username = usernameInput ? usernameInput.value.trim() : "";
+            const password = passwordInput ? passwordInput.value : "";
+            
+            if (!username || !password) {
+                showAlert("Please enter both username and password.");
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...';
+            }
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || data.message || "Invalid credentials.");
+                }
+
+                setStoredSession(data.user, data.token);
+                closeAuthModal();
+
+                // Unlock target tab if user was redirected
+                if (pendingTargetTabId) {
+                    activateTab(pendingTargetTabId);
+                    pendingTargetTabId = null;
+                }
+            } catch (err) {
+                showAlert(err.message || "Login failed. Please check your credentials.");
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In';
+                }
+            }
+        });
+    }
+
+    // Signup Form Submit
+    if (authSignupForm) {
+        authSignupForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            clearAlert();
+            const submitBtn = document.getElementById("signup-submit-btn");
+            const usernameInput = document.getElementById("signup-username");
+            const emailInput = document.getElementById("signup-email");
+            const fullnameInput = document.getElementById("signup-fullname");
+            const passwordInput = document.getElementById("signup-password");
+
+            const username = usernameInput ? usernameInput.value.trim() : "";
+            const email = emailInput ? emailInput.value.trim() : "";
+            const full_name = fullnameInput ? fullnameInput.value.trim() : "";
+            const password = passwordInput ? passwordInput.value : "";
+
+            if (!username || !email || !password) {
+                showAlert("Please fill in all required fields.");
+                return;
+            }
+            if (password.length < 6) {
+                showAlert("Password must be at least 6 characters.");
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating account...';
+            }
+
+            try {
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, full_name, password })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || data.message || "Registration failed.");
+                }
+
+                showAlert("Account created successfully! Authorizing...", false);
+                setStoredSession(data.user, data.token);
+
+                setTimeout(() => {
+                    closeAuthModal();
+                    if (pendingTargetTabId) {
+                        activateTab(pendingTargetTabId);
+                        pendingTargetTabId = null;
+                    }
+                }, 800);
+            } catch (err) {
+                showAlert(err.message || "Registration failed. Please try again.");
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Account & Unlock All Features';
+                }
+            }
+        });
+    }
+
+    // Initialize Auth UI state on load
+    renderAuthUI();
     
     // Test API connection
     fetch('/api/health')
